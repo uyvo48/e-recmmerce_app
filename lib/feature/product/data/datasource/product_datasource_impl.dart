@@ -8,26 +8,23 @@ class ProductDataSourceImpl implements ProductDataSource {
   ProductDataSourceImpl({required this.dio});
 
   @override
-  Future<List<ProductModel>> getProducts({int offset = 0, int limit = 10}) async {
+  Future<List<ProductModel>> getProducts(
+      {int offset = 0, int limit = 10}) async {
     try {
-      print('🔵 [API] Calling: /products');
       final response = await dio.get('/products');
-      print('🟢 [API] Status: ${response.statusCode}');
-      print('🟢 [API] Response type: ${response.data.runtimeType}');
-      
+
       List<dynamic> data;
-      
+
       if (response.data is List) {
         data = response.data as List<dynamic>;
       } else if (response.data is Map<String, dynamic>) {
         final map = response.data as Map<String, dynamic>;
-        data = (map['data'] ?? map['products'] ?? map['items'] ?? []) as List<dynamic>;
+        data = (map['data'] ?? map['products'] ?? map['items'] ?? [])
+            as List<dynamic>;
       } else {
         throw Exception('Unexpected response format');
       }
-      
-      print('🟢 [API] Products count: ${data.length}');
-      
+
       // Apply pagination manually
       final startIndex = offset;
       final endIndex = (startIndex + limit).clamp(0, data.length);
@@ -37,20 +34,14 @@ class ProductDataSourceImpl implements ProductDataSource {
           .whereType<Map<String, dynamic>>()
           .map(ProductModel.fromJson)
           .toList();
-      
-      print('🟢 [API] Parsed products: ${products.length}');
       return products;
     } on DioException catch (error) {
-      print('🔴 [API] DioException: ${error.type}');
-      print('🔴 [API] Status code: ${error.response?.statusCode}');
-      
       final data = error.response?.data;
       if (data is Map<String, dynamic> && data['message'] != null) {
         throw Exception(data['message'].toString());
       }
       throw Exception('Khong tai duoc danh sach san pham.');
-    } catch (error, stackTrace) {
-      print('🔴 [API] General error: $error');
+    } catch (error) {
       throw Exception('Du lieu san pham khong hop le.');
     }
   }
@@ -58,23 +49,118 @@ class ProductDataSourceImpl implements ProductDataSource {
   @override
   Future<ProductModel> getProductById(String id) async {
     try {
-      print('🔵 [API] Calling: /products/$id');
       final response = await dio.get('/products/$id');
-      print('🟢 [API] Status: ${response.statusCode}');
-      
+
       final data = response.data as Map<String, dynamic>;
       return ProductModel.fromJson(data);
     } on DioException catch (error) {
-      print('🔴 [API] DioException: ${error.type}');
-      
       final data = error.response?.data;
       if (data is Map<String, dynamic> && data['message'] != null) {
         throw Exception(data['message'].toString());
       }
       throw Exception('Khong tai duoc thong tin san pham.');
     } catch (error) {
-      print('🔴 [API] General error: $error');
       throw Exception('Du lieu san pham khong hop le.');
+    }
+  }
+
+  @override
+  Future<ProductModel> createProduct({
+    required String title,
+    required double price,
+    required String description,
+    required int categoryId,
+    required List<String> images,
+  }) async {
+    try {
+      final response = await dio.post('/products/', data: {
+        'title': title,
+        'price': price,
+        'description': description,
+        'categoryId': categoryId,
+        'images': images,
+      });
+
+      final data = response.data as Map<String, dynamic>;
+      return ProductModel.fromJson(data);
+    } on DioException catch (error) {
+      final data = error.response?.data;
+      if (data is Map<String, dynamic> && data['message'] != null) {
+        throw Exception(data['message'].toString());
+      }
+      throw Exception('Khong tao duoc san pham.');
+    } catch (error) {
+      throw Exception('Khong tao duoc san pham.');
+    }
+  }
+
+  @override
+  Future<ProductModel> updateProduct({
+    required String id,
+    required String title,
+    required double price,
+    required String description,
+    required int categoryId,
+    required List<String> images,
+  }) async {
+    try {
+      final response = await dio.put('/products/$id', data: {
+        'title': title,
+        'price': price,
+        'description': description,
+        'categoryId': categoryId,
+        'images': images,
+      });
+
+      final data = response.data as Map<String, dynamic>;
+      return ProductModel.fromJson(data);
+    } on DioException catch (error) {
+      final data = error.response?.data;
+      if (data is Map<String, dynamic> && data['message'] != null) {
+        throw Exception(data['message'].toString());
+      }
+      throw Exception('Khong cap nhat duoc san pham.');
+    } catch (error) {
+      throw Exception('Khong cap nhat duoc san pham.');
+    }
+  }
+
+  @override
+  Future<bool> deleteProduct(String id) async {
+    try {
+      final response = await dio.delete('/products/$id');
+
+      return response.statusCode == 200;
+    } on DioException catch (error) {
+      final data = error.response?.data;
+      if (data is Map<String, dynamic> && data['message'] != null) {
+        throw Exception(data['message'].toString());
+      }
+      throw Exception('Khong xoa duoc san pham.');
+    } catch (error) {
+      throw Exception('Khong xoa duoc san pham.');
+    }
+  }
+
+  @override
+  Future<List<ProductModel>> getRelatedProducts(String slug) async {
+    try {
+      final response = await dio.get('/products/slug/$slug/related');
+
+      final data = response.data as List<dynamic>;
+
+      return data
+          .whereType<Map<String, dynamic>>()
+          .map(ProductModel.fromJson)
+          .toList();
+    } on DioException catch (error) {
+      final data = error.response?.data;
+      if (data is Map<String, dynamic> && data['message'] != null) {
+        throw Exception(data['message'].toString());
+      }
+      throw Exception('Khong tai duoc san pham lien quan.');
+    } catch (error) {
+      throw Exception('Du lieu khong hop le.');
     }
   }
 }
