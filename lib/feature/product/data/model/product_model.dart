@@ -14,22 +14,21 @@ class ProductModel extends ProductEntity {
   });
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {
-    final brand = json['brand'];
     final category = json['category'];
+    final images = json['images'] as List<dynamic>? ?? [];
 
     return ProductModel(
-      id: json['_id'] as String? ?? json['id'] as String? ?? '',
+      id: json['id']?.toString() ?? '',
       title: json['title'] as String? ?? '',
-      imageCover: json['imageCover'] as String? ?? '',
-      brandName:
-          brand is Map<String, dynamic> ? brand['name'] as String? ?? '' : '',
+      imageCover: images.isNotEmpty ? images[0] as String? ?? '' : '',
+      brandName: '',
       categoryName: category is Map<String, dynamic>
           ? category['name'] as String? ?? ''
           : '',
-      price: json['price'] as num? ?? 0,
-      ratingsAverage: json['ratingsAverage'] as num? ?? 0,
-      ratingsQuantity: json['ratingsQuantity'] as int? ?? 0,
-      sold: json['sold'] as int? ?? 0,
+      price: (json['price'] as num?)?.toDouble() ?? 0,
+      ratingsAverage: 0,
+      ratingsQuantity: 0,
+      sold: 0,
     );
   }
 }

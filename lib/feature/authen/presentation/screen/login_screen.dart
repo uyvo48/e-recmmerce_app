@@ -4,6 +4,8 @@ import 'package:e_commerce_app/feature/authen/presentation/screen/test_api_scree
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../home/presentation/screen/home_screen.dart';
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -37,7 +39,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 MaterialPageRoute(
                   builder: (_) => BlocProvider.value(
                     value: context.read<AuthBloc>(),
-                    child: const TestApiScreen(),
+                    child: const HomeScreen(),
                   ),
                 ),
               );
