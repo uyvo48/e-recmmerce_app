@@ -13,6 +13,12 @@ final class AuthSuccess extends AuthState {
   AuthSuccess(this.message);
 }
 
+final class AuthLogoutSuccess extends AuthState {
+  final String message;
+
+  AuthLogoutSuccess(this.message);
+}
+
 final class AuthFailure extends AuthState {
   final String message;
 

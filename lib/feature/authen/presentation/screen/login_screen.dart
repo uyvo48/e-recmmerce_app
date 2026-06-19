@@ -1,33 +1,27 @@
 import 'package:e_commerce_app/feature/authen/presentation/bloc/auth_bloc.dart';
-import 'package:e_commerce_app/feature/home/presentation/screen/home_screen.dart';
+import 'package:e_commerce_app/feature/authen/presentation/screen/logup_screen.dart';
+import 'package:e_commerce_app/feature/authen/presentation/screen/test_api_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class LogUpScreen extends StatefulWidget {
-  const LogUpScreen({super.key});
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
 
   @override
-  State<LogUpScreen> createState() => _LogUpScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LogUpScreenState extends State<LogUpScreen> {
+class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _rePasswordController = TextEditingController();
 
   bool _hidePassword = true;
-  bool _hideRePassword = true;
 
   @override
   void dispose() {
-    _nameController.dispose();
     _emailController.dispose();
-    _phoneController.dispose();
     _passwordController.dispose();
-    _rePasswordController.dispose();
     super.dispose();
   }
 
@@ -43,7 +37,7 @@ class _LogUpScreenState extends State<LogUpScreen> {
                 MaterialPageRoute(
                   builder: (_) => BlocProvider.value(
                     value: context.read<AuthBloc>(),
-                    child: const HomeScreen(),
+                    child: const TestApiScreen(),
                   ),
                 ),
               );
@@ -74,7 +68,7 @@ class _LogUpScreenState extends State<LogUpScreen> {
                       ),
                       const SizedBox(height: 18),
                       Text(
-                        'Tao tai khoan',
+                        'Dang nhap',
                         textAlign: TextAlign.center,
                         style: Theme.of(context)
                             .textTheme
@@ -86,7 +80,7 @@ class _LogUpScreenState extends State<LogUpScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Dang ky de bat dau mua sam',
+                        'Chao mung ban quay lai',
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: const Color(0xFF6B7280),
@@ -94,44 +88,14 @@ class _LogUpScreenState extends State<LogUpScreen> {
                       ),
                       const SizedBox(height: 28),
                       _TextInput(
-                        controller: _nameController,
-                        label: 'Ho ten',
-                        icon: Icons.person_outline,
-                        textInputAction: TextInputAction.next,
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Vui long nhap ho ten';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 14),
-                      _TextInput(
                         controller: _emailController,
                         label: 'Email',
                         icon: Icons.email_outlined,
                         keyboardType: TextInputType.emailAddress,
                         textInputAction: TextInputAction.next,
                         validator: (value) {
-                          final email = value?.trim() ?? '';
-                          final regex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
-                          if (!regex.hasMatch(email)) {
-                            return 'Email khong hop le';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 14),
-                      _TextInput(
-                        controller: _phoneController,
-                        label: 'So dien thoai',
-                        icon: Icons.phone_outlined,
-                        keyboardType: TextInputType.phone,
-                        textInputAction: TextInputAction.next,
-                        validator: (value) {
-                          final phone = value?.trim() ?? '';
-                          if (!RegExp(r'^[0-9]{9,12}$').hasMatch(phone)) {
-                            return 'So dien thoai khong hop le';
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Vui long nhap email';
                           }
                           return null;
                         },
@@ -142,7 +106,8 @@ class _LogUpScreenState extends State<LogUpScreen> {
                         label: 'Mat khau',
                         icon: Icons.lock_outline,
                         obscureText: _hidePassword,
-                        textInputAction: TextInputAction.next,
+                        textInputAction: TextInputAction.done,
+                        onFieldSubmitted: (_) => _submit(),
                         suffixIcon: IconButton(
                           tooltip:
                               _hidePassword ? 'Hien mat khau' : 'An mat khau',
@@ -158,37 +123,8 @@ class _LogUpScreenState extends State<LogUpScreen> {
                           ),
                         ),
                         validator: (value) {
-                          if ((value ?? '').length < 6) {
-                            return 'Mat khau phai co it nhat 6 ky tu';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 14),
-                      _TextInput(
-                        controller: _rePasswordController,
-                        label: 'Nhap lai mat khau',
-                        icon: Icons.lock_reset_outlined,
-                        obscureText: _hideRePassword,
-                        textInputAction: TextInputAction.done,
-                        onFieldSubmitted: (_) => _submit(),
-                        suffixIcon: IconButton(
-                          tooltip:
-                              _hideRePassword ? 'Hien mat khau' : 'An mat khau',
-                          onPressed: () {
-                            setState(() {
-                              _hideRePassword = !_hideRePassword;
-                            });
-                          },
-                          icon: Icon(
-                            _hideRePassword
-                                ? Icons.visibility_outlined
-                                : Icons.visibility_off_outlined,
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value != _passwordController.text) {
-                            return 'Mat khau nhap lai khong khop';
+                          if (value == null || value.isEmpty) {
+                            return 'Vui long nhap mat khau';
                           }
                           return null;
                         },
@@ -217,7 +153,7 @@ class _LogUpScreenState extends State<LogUpScreen> {
                                       ),
                                     )
                                   : const Text(
-                                      'Dang ky',
+                                      'Dang nhap',
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w700,
@@ -230,7 +166,14 @@ class _LogUpScreenState extends State<LogUpScreen> {
                       const SizedBox(height: 16),
                       TextButton(
                         onPressed: () {
-                          Navigator.of(context).pop();
+                          Navigator.of(context).pushReplacement(
+                            MaterialPageRoute(
+                              builder: (_) => BlocProvider.value(
+                                value: context.read<AuthBloc>(),
+                                child: const LogUpScreen(),
+                              ),
+                            ),
+                          );
                         },
                         child: RichText(
                           text: TextSpan(
@@ -239,9 +182,9 @@ class _LogUpScreenState extends State<LogUpScreen> {
                                 .bodyMedium
                                 ?.copyWith(color: const Color(0xFF6B7280)),
                             children: const [
-                              TextSpan(text: 'Da co tai khoan? '),
+                              TextSpan(text: 'Chua co tai khoan? '),
                               TextSpan(
-                                text: 'Dang nhap',
+                                text: 'Dang ky',
                                 style: TextStyle(
                                   color: Color(0xFF0F766E),
                                   fontWeight: FontWeight.w600,
@@ -268,12 +211,9 @@ class _LogUpScreenState extends State<LogUpScreen> {
     }
 
     context.read<AuthBloc>().add(
-          LogUpSubmitted(
-            name: _nameController.text,
+          LoginSubmitted(
             email: _emailController.text,
             password: _passwordController.text,
-            rePassword: _rePasswordController.text,
-            phone: _phoneController.text,
           ),
         );
   }

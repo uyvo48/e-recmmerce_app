@@ -18,3 +18,12 @@ final class LogUpSubmitted extends AuthEvent {
     required this.phone,
   });
 }
+
+final class LoginSubmitted extends AuthEvent {
+  final String email;
+  final String password;
+
+  LoginSubmitted({required this.email, required this.password});
+}
+
+final class LogoutRequested extends AuthEvent {}

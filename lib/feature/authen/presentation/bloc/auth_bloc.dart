@@ -1,15 +1,18 @@
 import 'package:bloc/bloc.dart';
 import 'package:e_commerce_app/feature/authen/domain/usecase/log_up_usecase.dart';
+import 'package:e_commerce_app/feature/authen/domain/usecase/login_usecase.dart';
+import 'package:e_commerce_app/feature/authen/domain/usecase/logout_usecase.dart';
 import 'package:flutter/foundation.dart';
+import 'package:get_it/get_it.dart';
 
 part 'auth_event.dart';
 part 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  final LogUpUseCase logUpUseCase;
-
-  AuthBloc({required this.logUpUseCase}) : super(AuthInitial()) {
+  AuthBloc() : super(AuthInitial()) {
     on<LogUpSubmitted>(_onLogUpSubmitted);
+    on<LoginSubmitted>(_onLoginSubmitted);
+    on<LogoutRequested>(_onLogoutRequested);
   }
 
   Future<void> _onLogUpSubmitted(
@@ -19,8 +22,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
 
     try {
+      final logUp = GetIt.instance<LogUpUseCase>();
+
       _validate(event);
-      await logUpUseCase(
+      await logUp(
         event.name,
         event.email,
         event.password,
@@ -28,6 +33,36 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         event.phone,
       );
       emit(AuthSuccess('Dang ky tai khoan thanh cong.'));
+    } catch (error) {
+      emit(AuthFailure(error.toString().replaceFirst('Exception: ', '')));
+    }
+  }
+
+  Future<void> _onLoginSubmitted(
+    LoginSubmitted event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+
+    try {
+      final loginUseCase = GetIt.instance<LoginUseCase>();
+      await loginUseCase(event.email, event.password);
+      emit(AuthSuccess('Dang nhap thanh cong.'));
+    } catch (error) {
+      emit(AuthFailure(error.toString().replaceFirst('Exception: ', '')));
+    }
+  }
+
+  Future<void> _onLogoutRequested(
+    LogoutRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+
+    try {
+      final logOut = GetIt.instance<LogoutUseCase>();
+      await logOut();
+      emit(AuthLogoutSuccess('Dang xuat thanh cong.'));
     } catch (error) {
       emit(AuthFailure(error.toString().replaceFirst('Exception: ', '')));
     }

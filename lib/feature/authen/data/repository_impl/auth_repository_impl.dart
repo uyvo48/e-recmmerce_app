@@ -21,4 +21,14 @@ class AuthRepositoryImpl implements AuthRepository {
       phone,
     );
   }
+
+  @override
+  Future<void> login(String email, String password) {
+    return dataSource.login(email, password);
+  }
+
+  @override
+  Future<void> logout() {
+    return dataSource.logout();
+  }
 }
