@@ -62,7 +62,8 @@ class AuthDataSourceImpl implements AuthDataSource {
 
                 error.requestOptions.headers['Authorization'] =
                     'Bearer $newAccessToken';
-                return handler.resolve(await loginDio.fetch(error.requestOptions));
+                return handler
+                    .resolve(await loginDio.fetch(error.requestOptions));
               } catch (_) {
                 await logout();
               }

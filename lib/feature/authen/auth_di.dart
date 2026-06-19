@@ -3,6 +3,7 @@ import 'package:e_commerce_app/feature/product/data/datasource/product_datasourc
 import 'package:e_commerce_app/feature/product/data/datasource/product_datasource_impl.dart';
 import 'package:e_commerce_app/feature/product/data/repository_impl/product_repository_impl.dart';
 import 'package:e_commerce_app/feature/product/domain/repository/product_repository.dart';
+import 'package:e_commerce_app/feature/product/domain/usecase/create_product_usecase.dart';
 import 'package:e_commerce_app/feature/product/domain/usecase/get_products_usecase.dart';
 import 'package:e_commerce_app/feature/product/presentation/cubit/product_cubit.dart';
 import 'package:get_it/get_it.dart';
@@ -83,7 +84,10 @@ void authDi() {
 
   if (!sl.isRegistered<ProductCubit>()) {
     sl.registerFactory<ProductCubit>(
-      () => ProductCubit(getProductsUseCase: sl()),
+      () => ProductCubit(
+        getProductsUseCase: sl(),
+        createProductUseCase: sl(),
+      ),
     );
   }
 
@@ -102,6 +106,12 @@ void authDi() {
   if (!sl.isRegistered<GetProductsUseCase>()) {
     sl.registerLazySingleton<GetProductsUseCase>(
       () => GetProductsUseCase(repository: sl()),
+    );
+  }
+
+  if (!sl.isRegistered<CreateProductUseCase>()) {
+    sl.registerLazySingleton<CreateProductUseCase>(
+      () => CreateProductUseCase(repository: sl()),
     );
   }
 }
