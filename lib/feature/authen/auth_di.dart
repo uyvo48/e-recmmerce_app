@@ -4,6 +4,7 @@ import 'package:e_commerce_app/feature/product/data/datasource/product_datasourc
 import 'package:e_commerce_app/feature/product/data/repository_impl/product_repository_impl.dart';
 import 'package:e_commerce_app/feature/product/domain/repository/product_repository.dart';
 import 'package:e_commerce_app/feature/product/domain/usecase/create_product_usecase.dart';
+import 'package:e_commerce_app/feature/product/domain/usecase/delete_product_usecase.dart';
 import 'package:e_commerce_app/feature/product/domain/usecase/get_products_usecase.dart';
 import 'package:e_commerce_app/feature/product/presentation/cubit/product_cubit.dart';
 import 'package:get_it/get_it.dart';
@@ -87,13 +88,23 @@ void authDi() {
       () => ProductCubit(
         getProductsUseCase: sl(),
         createProductUseCase: sl(),
+        deleteProductUseCase: sl(),
       ),
     );
   }
 
   if (!sl.isRegistered<ProductDataSource>()) {
     sl.registerLazySingleton<ProductDataSource>(
-      () => ProductDataSourceImpl(dio: sl()),
+      () => ProductDataSourceImpl(
+        dio: Dio(
+          BaseOptions(
+            baseUrl: 'https://api.escuelajs.co/api/v1',
+            connectTimeout: const Duration(seconds: 20),
+            receiveTimeout: const Duration(seconds: 20),
+            headers: {'Content-Type': 'application/json'},
+          ),
+        ),
+      ),
     );
   }
 
@@ -112,6 +123,12 @@ void authDi() {
   if (!sl.isRegistered<CreateProductUseCase>()) {
     sl.registerLazySingleton<CreateProductUseCase>(
       () => CreateProductUseCase(repository: sl()),
+    );
+  }
+
+  if (!sl.isRegistered<DeleteProductUseCase>()) {
+    sl.registerLazySingleton<DeleteProductUseCase>(
+      () => DeleteProductUseCase(repository: sl()),
     );
   }
 }

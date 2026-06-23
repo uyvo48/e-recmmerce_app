@@ -19,21 +19,39 @@ class ProductDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            AspectRatio(
-              aspectRatio: 1,
-              child: Image.network(
-                product.imageCover,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return const ColoredBox(
-                    color: Color(0xFFE5E7EB),
-                    child: Center(
-                      child: Icon(Icons.image_not_supported_outlined, size: 64),
-                    ),
-                  );
-                },
+            if (product.images.isNotEmpty)
+              AspectRatio(
+                aspectRatio: 1,
+                child: PageView.builder(
+                  itemCount: product.images.length,
+                  itemBuilder: (context, index) {
+                    return Image.network(
+                      product.images[index],
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const ColoredBox(
+                          color: Color(0xFFE5E7EB),
+                          child: Center(
+                            child: Icon(
+                                Icons.image_not_supported_outlined, size: 64),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              )
+            else
+              const AspectRatio(
+                aspectRatio: 1,
+                child: ColoredBox(
+                  color: Color(0xFFE5E7EB),
+                  child: Center(
+                    child:
+                        Icon(Icons.image_not_supported_outlined, size: 64),
+                  ),
+                ),
               ),
-            ),
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -69,7 +87,7 @@ class ProductDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    '${product.price} EGP',
+                    '${product.price} \$',
                     style: const TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.w800,
@@ -77,37 +95,12 @@ class ProductDetailScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.star,
-                        size: 20,
-                        color: Color(0xFFF59E0B),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        '${product.ratingsAverage}',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '(${product.ratingsQuantity} danh gia)',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Color(0xFF6B7280),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
                   Text(
-                    'Da ban ${product.sold}',
+                    product.description,
                     style: const TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF6B7280),
+                      fontSize: 15,
+                      color: Color(0xFF374151),
+                      height: 1.5,
                     ),
                   ),
                 ],

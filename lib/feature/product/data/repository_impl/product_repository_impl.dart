@@ -8,8 +8,22 @@ class ProductRepositoryImpl implements ProductRepository {
   ProductRepositoryImpl({required this.dataSource});
 
   @override
-  Future<List<ProductEntity>> getProducts({int offset = 0, int limit = 10}) {
-    return dataSource.getProducts(offset: offset, limit: limit);
+  Future<List<ProductEntity>> getProducts({
+    int offset = 0,
+    int limit = 10,
+    num? price,
+    num? priceMin,
+    num? priceMax,
+    int? categoryId,
+  }) {
+    return dataSource.getProducts(
+      offset: offset,
+      limit: limit,
+      price: price,
+      priceMin: priceMin,
+      priceMax: priceMax,
+      categoryId: categoryId,
+    );
   }
 
   @override

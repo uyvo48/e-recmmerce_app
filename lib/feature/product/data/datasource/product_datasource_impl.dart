@@ -8,10 +8,28 @@ class ProductDataSourceImpl implements ProductDataSource {
   ProductDataSourceImpl({required this.dio});
 
   @override
-  Future<List<ProductModel>> getProducts(
-      {int offset = 0, int limit = 10}) async {
+  Future<List<ProductModel>> getProducts({
+    int offset = 0,
+    int limit = 10,
+    num? price,
+    num? priceMin,
+    num? priceMax,
+    int? categoryId,
+  }) async {
     try {
-      final response = await dio.get('/products');
+      final queryParameters = <String, dynamic>{
+        'offset': offset,
+        'limit': limit,
+        if (price != null) 'price': price,
+        if (priceMin != null) 'price_min': priceMin,
+        if (priceMax != null) 'price_max': priceMax,
+        if (categoryId != null) 'categoryId': categoryId,
+      };
+
+      final response = await dio.get(
+        '/products',
+        queryParameters: queryParameters,
+      );
 
       List<dynamic> data;
 
@@ -25,12 +43,7 @@ class ProductDataSourceImpl implements ProductDataSource {
         throw Exception('Unexpected response format');
       }
 
-      // Apply pagination manually
-      final startIndex = offset;
-      final endIndex = (startIndex + limit).clamp(0, data.length);
-      final paginatedData = data.sublist(startIndex, endIndex);
-
-      final products = paginatedData
+      final products = data
           .whereType<Map<String, dynamic>>()
           .map(ProductModel.fromJson)
           .toList();

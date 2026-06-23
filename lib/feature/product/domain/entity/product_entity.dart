@@ -1,23 +1,25 @@
+import 'package:e_commerce_app/feature/product/domain/entity/category_entity.dart';
+
 class ProductEntity {
-  final String id;
+  final int id;
   final String title;
-  final String imageCover;
-  final String brandName;
-  final String categoryName;
+  final String slug;
   final num price;
-  final num ratingsAverage;
-  final int ratingsQuantity;
-  final int sold;
+  final String description;
+  final CategoryEntity category;
+  final List<String> images;
 
   ProductEntity({
     required this.id,
     required this.title,
-    required this.imageCover,
-    required this.brandName,
-    required this.categoryName,
+    required this.slug,
     required this.price,
-    required this.ratingsAverage,
-    required this.ratingsQuantity,
-    required this.sold,
+    required this.description,
+    required this.category,
+    required this.images,
   });
+
+  String get imageCover => images.isNotEmpty ? images.first : '';
+
+  String get categoryName => category.name;
 }

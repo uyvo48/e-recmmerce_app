@@ -16,26 +16,18 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final _scrollController = ScrollController();
-  ProductCubit? _productCubit;
-
-  @override
-  void initState() {
-    super.initState();
-    _scrollController.addListener(_onScroll);
-  }
+  final _priceController = TextEditingController();
+  final _priceMinController = TextEditingController();
+  final _priceMaxController = TextEditingController();
+  final _categoryIdController = TextEditingController();
 
   @override
   void dispose() {
-    _scrollController.dispose();
+    _priceController.dispose();
+    _priceMinController.dispose();
+    _priceMaxController.dispose();
+    _categoryIdController.dispose();
     super.dispose();
-  }
-
-  void _onScroll() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200) {
-      _productCubit?.loadMoreProducts();
-    }
   }
 
   @override
@@ -43,7 +35,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return BlocProvider(
       create: (_) {
         final cubit = GetIt.instance<ProductCubit>()..getProducts();
-        _productCubit = cubit;
         return cubit;
       },
       child: BlocListener<AuthBloc, AuthState>(
@@ -119,65 +110,82 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
-          body: BlocBuilder<ProductCubit, ProductState>(
-            builder: (context, state) {
-              if (state is ProductLoading || state is ProductInitial) {
-                return const Center(child: CircularProgressIndicator());
-              }
+          body: Column(
+            children: [
+              _ProductFilterBar(
+                priceController: _priceController,
+                priceMinController: _priceMinController,
+                priceMaxController: _priceMaxController,
+                categoryIdController: _categoryIdController,
+                onApply: () => _applyFilters(context),
+                onClear: () => _clearFilters(context),
+              ),
+              Expanded(
+                child: BlocBuilder<ProductCubit, ProductState>(
+                  builder: (context, state) {
+                    if (state is ProductLoading || state is ProductInitial) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
 
-              if (state is ProductFailure) {
-                return _ProductError(message: state.message);
-              }
+                    if (state is ProductFailure) {
+                      return _ProductError(message: state.message);
+                    }
 
-              if (state is ProductSuccess) {
-                if (state.products.isEmpty) {
-                  return const Center(child: Text('Chua co san pham.'));
-                }
+                    if (state is ProductSuccess) {
+                      if (state.products.isEmpty) {
+                        return const Center(child: Text('Chua co san pham.'));
+                      }
 
-                return RefreshIndicator(
-                  onRefresh: context.read<ProductCubit>().getProducts,
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final width = constraints.maxWidth;
-                      final crossAxisCount = width >= 1000
-                          ? 4
-                          : width >= 720
-                              ? 3
-                              : 2;
+                      return Column(
+                        children: [
+                          Expanded(
+                            child: RefreshIndicator(
+                              onRefresh: () => context.read<ProductCubit>().goToPage(state.currentPage),
+                              child: LayoutBuilder(
+                                builder: (context, constraints) {
+                                  final width = constraints.maxWidth;
+                                  final crossAxisCount = width >= 1000
+                                      ? 4
+                                      : width >= 720
+                                          ? 3
+                                          : 2;
 
-                      return GridView.builder(
-                        controller: _scrollController,
-                        padding: const EdgeInsets.all(16),
-                        itemCount:
-                            state.products.length + (state.hasMore ? 1 : 0),
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: crossAxisCount,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                          childAspectRatio: width >= 720 ? 0.72 : 0.62,
-                        ),
-                        itemBuilder: (context, index) {
-                          if (index == state.products.length) {
-                            return const Center(
-                              child: Padding(
-                                padding: EdgeInsets.all(16),
-                                child: CircularProgressIndicator(),
+                                  return GridView.builder(
+                                    padding: const EdgeInsets.all(16),
+                                    itemCount: state.products.length,
+                                    gridDelegate:
+                                        SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: crossAxisCount,
+                                      crossAxisSpacing: 12,
+                                      mainAxisSpacing: 12,
+                                      childAspectRatio: width >= 720 ? 0.72 : 0.62,
+                                    ),
+                                    itemBuilder: (context, index) {
+                                      return _ProductCard(
+                                          product: state.products[index]);
+                                    },
+                                  );
+                                },
                               ),
-                            );
-                          }
-                          return _ProductCard(
-                            product: state.products[index],
-                            onDeleted: () => _showSnackBar('Xoa thanh cong'),
-                          );
-                        },
+                            ),
+                          ),
+                          _PaginationBar(
+                            currentPage: state.currentPage,
+                            hasNext: state.hasNext,
+                            hasPrevious: state.hasPrevious,
+                            onPrevious: () => context.read<ProductCubit>().previousPage(),
+                            onNext: () => context.read<ProductCubit>().nextPage(),
+                            onGoToPage: (page) => context.read<ProductCubit>().goToPage(page),
+                          ),
+                        ],
                       );
-                    },
-                  ),
-                );
-              }
+                    }
 
-              return const SizedBox.shrink();
-            },
+                    return const SizedBox.shrink();
+                  },
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -187,6 +195,125 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
+    );
+  }
+
+  void _applyFilters(BuildContext context) {
+    final price = num.tryParse(_priceController.text.trim());
+    final priceMin = num.tryParse(_priceMinController.text.trim());
+    final priceMax = num.tryParse(_priceMaxController.text.trim());
+    final categoryId = int.tryParse(_categoryIdController.text.trim());
+
+    FocusScope.of(context).unfocus();
+    context.read<ProductCubit>().applyFilters(
+          price: price,
+          priceMin: priceMin,
+          priceMax: priceMax,
+          categoryId: categoryId,
+        );
+  }
+
+  void _clearFilters(BuildContext context) {
+    _priceController.clear();
+    _priceMinController.clear();
+    _priceMaxController.clear();
+    _categoryIdController.clear();
+    FocusScope.of(context).unfocus();
+    context.read<ProductCubit>().clearFilters();
+  }
+}
+
+class _ProductFilterBar extends StatelessWidget {
+  final TextEditingController priceController;
+  final TextEditingController priceMinController;
+  final TextEditingController priceMaxController;
+  final TextEditingController categoryIdController;
+  final VoidCallback onApply;
+  final VoidCallback onClear;
+
+  const _ProductFilterBar({
+    required this.priceController,
+    required this.priceMinController,
+    required this.priceMaxController,
+    required this.categoryIdController,
+    required this.onApply,
+    required this.onClear,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+        child: Row(
+          children: [
+            _FilterField(
+              controller: priceController,
+              label: 'Gia',
+            ),
+            const SizedBox(width: 8),
+            _FilterField(
+              controller: priceMinController,
+              label: 'Gia min',
+            ),
+            const SizedBox(width: 8),
+            _FilterField(
+              controller: priceMaxController,
+              label: 'Gia max',
+            ),
+            const SizedBox(width: 8),
+            _FilterField(
+              controller: categoryIdController,
+              label: 'Category ID',
+            ),
+            const SizedBox(width: 8),
+            IconButton.filled(
+              tooltip: 'Loc',
+              onPressed: onApply,
+              icon: const Icon(Icons.filter_alt),
+            ),
+            const SizedBox(width: 4),
+            IconButton.outlined(
+              tooltip: 'Xoa filter',
+              onPressed: onClear,
+              icon: const Icon(Icons.filter_alt_off),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FilterField extends StatelessWidget {
+  final TextEditingController controller;
+  final String label;
+
+  const _FilterField({
+    required this.controller,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 118,
+      child: TextField(
+        controller: controller,
+        keyboardType: TextInputType.number,
+        textInputAction: TextInputAction.next,
+        decoration: InputDecoration(
+          labelText: label,
+          isDense: true,
+          filled: true,
+          fillColor: const Color(0xFFF7F7F9),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -228,11 +355,155 @@ class _ProductError extends StatelessWidget {
   }
 }
 
+class _PaginationBar extends StatelessWidget {
+  final int currentPage;
+  final bool hasNext;
+  final bool hasPrevious;
+  final VoidCallback onPrevious;
+  final VoidCallback onNext;
+  final ValueChanged<int> onGoToPage;
+
+  const _PaginationBar({
+    required this.currentPage,
+    required this.hasNext,
+    required this.hasPrevious,
+    required this.onPrevious,
+    required this.onNext,
+    required this.onGoToPage,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          top: BorderSide(color: Color(0xFFE5E7EB)),
+        ),
+      ),
+      child: Row(
+        children: [
+          // Nút Previous
+          IconButton(
+            tooltip: 'Trang truoc',
+            onPressed: hasPrevious ? onPrevious : null,
+            icon: const Icon(Icons.chevron_left),
+            style: IconButton.styleFrom(
+              backgroundColor: hasPrevious
+                  ? const Color(0xFF0F766E).withAlpha(25)
+                  : null,
+              foregroundColor: hasPrevious
+                  ? const Color(0xFF0F766E)
+                  : Colors.grey,
+            ),
+          ),
+
+          const SizedBox(width: 8),
+
+          // Các nút số trang – có thể scroll ngang
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: _buildPageButtons(),
+              ),
+            ),
+          ),
+
+          const SizedBox(width: 8),
+
+          // Nút Next
+          IconButton(
+            tooltip: 'Trang sau',
+            onPressed: hasNext ? onNext : null,
+            icon: const Icon(Icons.chevron_right),
+            style: IconButton.styleFrom(
+              backgroundColor: hasNext
+                  ? const Color(0xFF0F766E).withAlpha(25)
+                  : null,
+              foregroundColor: hasNext
+                  ? const Color(0xFF0F766E)
+                  : Colors.grey,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildPageButtons() {
+    final List<Widget> buttons = [];
+
+    // Hiển thị tối đa 5 nút trang xung quanh trang hiện tại
+    int start = (currentPage - 2).clamp(1, currentPage);
+    int end = start + 4;
+
+    // Luôn hiển thị trang 1
+    if (start > 1) {
+      buttons.add(_pageButton(1));
+      if (start > 2) {
+        buttons.add(const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 4),
+          child: Text('...', style: TextStyle(color: Colors.grey)),
+        ));
+      }
+    }
+
+    for (int i = start; i <= end; i++) {
+      // Nếu không có trang tiếp theo và i > currentPage thì dừng
+      if (!hasNext && i > currentPage) break;
+      buttons.add(_pageButton(i));
+    }
+
+    if (hasNext && end < currentPage + 3) {
+      buttons.add(const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 4),
+        child: Text('...', style: TextStyle(color: Colors.grey)),
+      ));
+    }
+
+    return buttons;
+  }
+
+  Widget _pageButton(int page) {
+    final isActive = page == currentPage;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: SizedBox(
+        width: 36,
+        height: 36,
+        child: TextButton(
+          onPressed: isActive ? null : () => onGoToPage(page),
+          style: TextButton.styleFrom(
+            padding: EdgeInsets.zero,
+            backgroundColor: isActive ? const Color(0xFF0F766E) : null,
+            foregroundColor: isActive ? Colors.white : const Color(0xFF374151),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+              side: isActive
+                  ? BorderSide.none
+                  : const BorderSide(color: Color(0xFFE5E7EB)),
+            ),
+          ),
+          child: Text(
+            '$page',
+            style: TextStyle(
+              fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+              fontSize: 13,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _ProductCard extends StatelessWidget {
   final ProductEntity product;
-  final VoidCallback? onDeleted;
 
-  const _ProductCard({required this.product, this.onDeleted});
+  const _ProductCard({required this.product});
 
   @override
   Widget build(BuildContext context) {
@@ -320,10 +591,10 @@ class _ProductCard extends StatelessWidget {
                             context,
                             MaterialPageRoute(
                               builder: (_) => ProductFormScreen(
-                                productId: product.id,
+                                productId: product.id.toString(),
                                 initialTitle: product.title,
                                 initialPrice: product.price.toDouble(),
-                                initialDescription: 'Description',
+                                initialDescription: product.description,
                               ),
                             ),
                           );
@@ -359,7 +630,24 @@ class _ProductCard extends StatelessWidget {
                             return;
                           }
                           if (confirm == true) {
-                            onDeleted?.call();
+                            final deleted = await context
+                                .read<ProductCubit>()
+                                .deleteProduct(product.id.toString());
+                            if (!context.mounted) {
+                              return;
+                            }
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  deleted
+                                      ? 'Xoa san pham thanh cong'
+                                      : 'Khong xoa duoc san pham',
+                                ),
+                                backgroundColor:
+                                    deleted ? null : Colors.red.shade700,
+                              ),
+                            );
                           }
                         }
                       },
@@ -396,7 +684,7 @@ class _ProductCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    product.brandName.isEmpty ? 'No brand' : product.brandName,
+                    product.categoryName.isEmpty ? 'No category' : product.categoryName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -418,44 +706,14 @@ class _ProductCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          '${product.price} EGP',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Color(0xFF111827),
-                            fontSize: 15,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                      const Icon(
-                        Icons.star,
-                        size: 16,
-                        color: Color(0xFFF59E0B),
-                      ),
-                      const SizedBox(width: 3),
-                      Text(
-                        product.ratingsAverage.toString(),
-                        style: const TextStyle(
-                          color: Color(0xFF374151),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
                   Text(
-                    'Da ban ${product.sold}',
+                    '${product.price} \$',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      color: Color(0xFF6B7280),
-                      fontSize: 12,
+                      color: Color(0xFF111827),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                 ],

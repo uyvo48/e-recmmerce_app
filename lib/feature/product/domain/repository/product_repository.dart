@@ -1,7 +1,14 @@
 import 'package:e_commerce_app/feature/product/domain/entity/product_entity.dart';
 
 abstract class ProductRepository {
-  Future<List<ProductEntity>> getProducts({int offset = 0, int limit = 10});
+  Future<List<ProductEntity>> getProducts({
+    int offset = 0,
+    int limit = 10,
+    num? price,
+    num? priceMin,
+    num? priceMax,
+    int? categoryId,
+  });
   Future<ProductEntity> getProductById(String id);
   Future<List<ProductEntity>> getRelatedProducts(String slug);
   Future<ProductEntity> createProduct({
