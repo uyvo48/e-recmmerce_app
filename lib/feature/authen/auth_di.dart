@@ -7,6 +7,7 @@ import 'package:e_commerce_app/feature/product/domain/usecase/create_product_use
 import 'package:e_commerce_app/feature/product/domain/usecase/delete_product_usecase.dart';
 import 'package:e_commerce_app/feature/product/domain/usecase/get_products_usecase.dart';
 import 'package:e_commerce_app/feature/product/presentation/cubit/product_cubit.dart';
+import 'package:e_commerce_app/feature/cart/presentation/cubit/cart_cubit.dart';
 import 'package:get_it/get_it.dart';
 
 import 'data/datasource/auth_datasource.dart';
@@ -20,6 +21,10 @@ import 'presentation/bloc/auth_bloc.dart';
 
 void authDi() {
   final sl = GetIt.instance;
+
+  if (!sl.isRegistered<CartCubit>()) {
+    sl.registerLazySingleton<CartCubit>(() => CartCubit());
+  }
 
   if (!sl.isRegistered<Dio>()) {
     sl.registerLazySingleton<Dio>(

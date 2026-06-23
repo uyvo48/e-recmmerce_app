@@ -1,5 +1,6 @@
 import 'package:e_commerce_app/feature/authen/presentation/bloc/auth_bloc.dart';
 import 'package:e_commerce_app/feature/authen/presentation/screen/login_screen.dart';
+import 'package:e_commerce_app/feature/cart/presentation/cubit/cart_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -16,8 +17,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => GetIt.instance<AuthBloc>(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<AuthBloc>(
+          create: (context) => GetIt.instance<AuthBloc>(),
+        ),
+        BlocProvider<CartCubit>(
+          create: (context) => GetIt.instance<CartCubit>(),
+        ),
+      ],
       child: MaterialApp(
         title: 'E-Commerce App',
         debugShowCheckedModeBanner: false,

@@ -1,5 +1,8 @@
 import 'package:e_commerce_app/feature/product/domain/entity/product_entity.dart';
+import 'package:e_commerce_app/feature/cart/presentation/cubit/cart_cubit.dart';
+import 'package:e_commerce_app/feature/cart/presentation/screen/cart_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ProductDetailScreen extends StatelessWidget {
   final ProductEntity product;
@@ -107,6 +110,86 @@ class ProductDetailScreen extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border(
+              top: BorderSide(color: Colors.grey.shade200),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withAlpha(13),
+                blurRadius: 4,
+                offset: const Offset(0, -2),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    context.read<CartCubit>().addToCart(product);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text('Đã thêm vào giỏ hàng'),
+                        behavior: SnackBarBehavior.floating,
+                        backgroundColor: const Color(0xFF0F766E),
+                        action: SnackBarAction(
+                          label: 'Xem giỏ',
+                          textColor: Colors.white,
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const CartScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.add_shopping_cart, size: 20),
+                  label: const Text('Thêm vào giỏ'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    foregroundColor: const Color(0xFF0F766E),
+                    side: const BorderSide(color: Color(0xFF0F766E)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () {
+                    context.read<CartCubit>().addToCart(product);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const CartScreen(),
+                      ),
+                    );
+                  },
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    backgroundColor: const Color(0xFF0F766E),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text('Mua ngay'),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

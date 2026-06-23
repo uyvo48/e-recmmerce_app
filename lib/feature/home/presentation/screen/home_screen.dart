@@ -4,6 +4,9 @@ import 'package:e_commerce_app/feature/product/domain/entity/product_entity.dart
 import 'package:e_commerce_app/feature/product/presentation/cubit/product_cubit.dart';
 import 'package:e_commerce_app/feature/product/presentation/screen/product_detail_screen.dart';
 import 'package:e_commerce_app/feature/product/presentation/screen/product_form_screen.dart';
+import 'package:e_commerce_app/feature/cart/presentation/cubit/cart_cubit.dart';
+import 'package:e_commerce_app/feature/cart/presentation/cubit/cart_state.dart';
+import 'package:e_commerce_app/feature/cart/presentation/screen/cart_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -16,14 +19,12 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final _priceController = TextEditingController();
   final _priceMinController = TextEditingController();
   final _priceMaxController = TextEditingController();
   final _categoryIdController = TextEditingController();
 
   @override
   void dispose() {
-    _priceController.dispose();
     _priceMinController.dispose();
     _priceMaxController.dispose();
     _categoryIdController.dispose();
@@ -70,6 +71,30 @@ class _HomeScreenState extends State<HomeScreen> {
             backgroundColor: const Color(0xFF0F766E),
             foregroundColor: Colors.white,
             actions: [
+              BlocBuilder<CartCubit, CartState>(
+                builder: (context, state) {
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 4.0),
+                    child: Badge(
+                      label: Text('${state.totalCount}'),
+                      isLabelVisible: state.totalCount > 0,
+                      backgroundColor: Colors.red.shade600,
+                      child: IconButton(
+                        tooltip: 'Gio hang',
+                        icon: const Icon(Icons.shopping_cart),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const CartScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  );
+                },
+              ),
               IconButton(
                 tooltip: 'Them san pham',
                 icon: const Icon(Icons.add),
@@ -110,16 +135,16 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
-          body: Column(
-            children: [
-              _ProductFilterBar(
-                priceController: _priceController,
-                priceMinController: _priceMinController,
-                priceMaxController: _priceMaxController,
-                categoryIdController: _categoryIdController,
-                onApply: () => _applyFilters(context),
-                onClear: () => _clearFilters(context),
-              ),
+          body: Builder(
+            builder: (context) => Column(
+              children: [
+                _ProductFilterBar(
+                  priceMinController: _priceMinController,
+                  priceMaxController: _priceMaxController,
+                  categoryIdController: _categoryIdController,
+                  onApply: () => _applyFilters(context),
+                  onClear: () => _clearFilters(context),
+                ),
               Expanded(
                 child: BlocBuilder<ProductCubit, ProductState>(
                   builder: (context, state) {
@@ -187,6 +212,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
+          ),
         ),
       ),
     );
@@ -199,14 +225,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _applyFilters(BuildContext context) {
-    final price = num.tryParse(_priceController.text.trim());
     final priceMin = num.tryParse(_priceMinController.text.trim());
     final priceMax = num.tryParse(_priceMaxController.text.trim());
     final categoryId = int.tryParse(_categoryIdController.text.trim());
 
     FocusScope.of(context).unfocus();
     context.read<ProductCubit>().applyFilters(
-          price: price,
           priceMin: priceMin,
           priceMax: priceMax,
           categoryId: categoryId,
@@ -214,7 +238,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _clearFilters(BuildContext context) {
-    _priceController.clear();
     _priceMinController.clear();
     _priceMaxController.clear();
     _categoryIdController.clear();
@@ -224,7 +247,6 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class _ProductFilterBar extends StatelessWidget {
-  final TextEditingController priceController;
   final TextEditingController priceMinController;
   final TextEditingController priceMaxController;
   final TextEditingController categoryIdController;
@@ -232,7 +254,6 @@ class _ProductFilterBar extends StatelessWidget {
   final VoidCallback onClear;
 
   const _ProductFilterBar({
-    required this.priceController,
     required this.priceMinController,
     required this.priceMaxController,
     required this.categoryIdController,
@@ -249,11 +270,6 @@ class _ProductFilterBar extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
         child: Row(
           children: [
-            _FilterField(
-              controller: priceController,
-              label: 'Gia',
-            ),
-            const SizedBox(width: 8),
             _FilterField(
               controller: priceMinController,
               label: 'Gia min',

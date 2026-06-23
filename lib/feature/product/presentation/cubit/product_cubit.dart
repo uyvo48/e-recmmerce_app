@@ -167,21 +167,25 @@ class ProductCubit extends Cubit<ProductState> {
   }
 
   Future<void> applyFilters({
-    num? price,
     num? priceMin,
     num? priceMax,
     int? categoryId,
   }) {
+    _estimatedTotal = 0;
     return getProducts(
-      price: price,
-      priceMin: price == null ? priceMin : null,
-      priceMax: price == null ? priceMax : null,
+      priceMin: priceMin,
+      priceMax: priceMax,
       categoryId: categoryId,
       keepCurrentFilters: false,
     );
   }
 
   Future<void> clearFilters() {
+    _estimatedTotal = 0;
+    _price = null;
+    _priceMin = null;
+    _priceMax = null;
+    _categoryId = null;
     return getProducts(keepCurrentFilters: false);
   }
 
