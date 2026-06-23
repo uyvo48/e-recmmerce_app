@@ -1,20 +1,24 @@
 import 'dart:convert';
+
 import 'package:crypto/crypto.dart';
 
 class VnpayService {
-  static const String _tmnCode = '2QX152N2';
-  static const String _hashSecret = '9UDB1Q8K8G69V1VFL6DHM8D11U8M11E5';
-  static const String _vnpayUrl = 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html';
-  static const String returnUrl = 'http://localhost/vnpay-return';
+  static const String _tmnCode = 'MZTYDYZE';
+  static const String _hashSecret = 'FHTPFNXAA26V6FVOQCVT0S6QUCA91OXL';
+  static const String _vnpayUrl =
+      'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html';
+  static const String returnUrl = 'https://exampleuy.com';
 
-  String generatePaymentUrl({required String orderId, required double amountInUsd}) {
-    // Quy đổi 1 USD = 1 VND để dễ test theo yêu cầu
-    final amountInVnd = amountInUsd;
+  String generatePaymentUrl(
+      {required String orderId, required double amountInUsd}) {
+    // Quy đổi 1 USD = 25000 VND theo yêu cầu
+    final amountInVnd = amountInUsd * 25000;
     // Số tiền nhân 100 theo chuẩn VNPAY
     final vnpAmount = (amountInVnd * 100).toInt();
 
     final now = DateTime.now();
-    final createDate = '${now.year}${_twoDigits(now.month)}${_twoDigits(now.day)}'
+    final createDate =
+        '${now.year}${_twoDigits(now.month)}${_twoDigits(now.day)}'
         '${_twoDigits(now.hour)}${_twoDigits(now.minute)}${_twoDigits(now.second)}';
 
     final params = <String, dynamic>{
@@ -37,8 +41,7 @@ class VnpayService {
 
     for (final key in sortedKeys) {
       final value = params[key]!.toString();
-      // VNPAY yêu cầu ký tự khoảng trắng được mã hóa thành %20 thay vì +
-      final encodedValue = Uri.encodeQueryComponent(value).replaceAll('+', '%20');
+      final encodedValue = Uri.encodeQueryComponent(value);
       queryComponents.add('$key=$encodedValue');
     }
 

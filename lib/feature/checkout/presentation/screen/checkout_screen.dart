@@ -120,7 +120,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(
-          builder: (_) => OrderSuccessScreen(orderId: _orderId),
+          builder: (_) => OrderSuccessScreen(
+            orderId: _orderId,
+            paymentMethod: _paymentMethod,
+          ),
         ),
         (route) => route.isFirst, // Giữ lại HomeScreen ở dưới cùng
       );

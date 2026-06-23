@@ -2,13 +2,36 @@ import 'package:flutter/material.dart';
 
 class OrderSuccessScreen extends StatelessWidget {
   final String orderId;
+  final String paymentMethod;
 
-  const OrderSuccessScreen({super.key, required this.orderId});
+  const OrderSuccessScreen({
+    super.key,
+    required this.orderId,
+    required this.paymentMethod,
+  });
 
   @override
   Widget build(BuildContext context) {
     final today = DateTime.now();
     final formattedDate = '${today.day}/${today.month}/${today.year}';
+
+    String statusText = 'Chờ xử lý';
+    Color statusBgColor = const Color(0xFFFEF3C7);
+    Color statusTextColor = const Color(0xFFD97706);
+
+    if (paymentMethod == 'vnpay' || paymentMethod == 'card') {
+      statusText = 'Đã thanh toán';
+      statusBgColor = const Color(0xFFD1FAE5);
+      statusTextColor = const Color(0xFF065F46);
+    } else if (paymentMethod == 'bank') {
+      statusText = 'Chờ xác nhận CK';
+      statusBgColor = const Color(0xFFE0F2FE);
+      statusTextColor = const Color(0xFF075985);
+    } else if (paymentMethod == 'cod') {
+      statusText = 'Chờ xử lý (COD)';
+      statusBgColor = const Color(0xFFF3F4F6);
+      statusTextColor = const Color(0xFF374151);
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F7F9),
@@ -79,7 +102,13 @@ class OrderSuccessScreen extends StatelessWidget {
                       const Divider(height: 24),
                       _buildReceiptRow('Mã đơn hàng', orderId, highlight: true),
                       _buildReceiptRow('Ngày đặt hàng', formattedDate),
-                      _buildReceiptRow('Trạng thái', 'Chờ xử lý', isStatus: true),
+                      _buildReceiptRow(
+                        'Trạng thái',
+                        statusText,
+                        isStatus: true,
+                        statusBgColor: statusBgColor,
+                        statusTextColor: statusTextColor,
+                      ),
                       _buildReceiptRow('Phương thức giao hàng', 'Giao hàng tiêu chuẩn'),
                       const Divider(height: 24),
                       const Row(
@@ -137,7 +166,14 @@ class OrderSuccessScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildReceiptRow(String label, String value, {bool highlight = false, bool isStatus = false}) {
+  Widget _buildReceiptRow(
+    String label,
+    String value, {
+    bool highlight = false,
+    bool isStatus = false,
+    Color? statusBgColor,
+    Color? statusTextColor,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
@@ -151,15 +187,15 @@ class OrderSuccessScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: const Color(0xFFFEF3C7),
+                color: statusBgColor ?? const Color(0xFFFEF3C7),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
                 value,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFFD97706),
+                  color: statusTextColor ?? const Color(0xFFD97706),
                 ),
               ),
             )
